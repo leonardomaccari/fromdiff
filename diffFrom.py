@@ -78,7 +78,10 @@ def diffFrom(left, right):
     emailDiffRatio = diffString(luser, ruser)
 
     # diff names
-    nameDiffRatio = diffString("".join(lname), "".join(rname))
+    if (len("".join(lname)) != 0) and (len("".join(rname)) != 0):
+        nameDiffRatio = diffString("".join(lname), "".join(rname))
+    else:
+        nameDiffRatio = 0
     
     # cross differences
 
