@@ -18,11 +18,53 @@ def get_param(prompt_string):
      input = screen.getstr(10, 10, 60)
      return input
 
+
+def followPath(d,step,path):
+    # base step
+    if d[step] not in d.keys():
+        path.append(d[step])
+        return path
+    elif d[step] in path:
+        screen.border(0)
+        screen.clear()
+        screen.addstr(2, 2, "Human Error! you have loops in your choice!")
+        screen.refresh()
+        curses.endwin()
+        return
+    path.append(d[step])
+    return followPath(d, d[step], path)
+        
+def cleanDict(d):
+    
+    i = 0
+    while True:
+        k = d.keys()[i]
+        path = followPath(d, k, [k])
+
+        screen.addstr(2, 2, repr(path))
+        screen.refresh()
+        sleep(2)
+        screen.clear()
+        if len(path) > 2:
+            root = path[-1]
+            for p in path[:-1]:
+                d[p] = root
+        i += 1
+        if i >= len(d):
+            break
+    return d
+
+
+
+
 def saveResults(aggregatedList):
     save = "Y"
     while True:
-        save = get_param("Save results? [Y/n]:")
-        if save == "Y":
+        save = get_param("Save results? [y/n]:")
+        if save == "y":
+            cleanup = get_param("Do you want to remove multiple merges [y/n]?")
+            if cleanup == "y":
+                aggregatedList = cleanDict(aggregatedList)
             filename = get_param("Enter Filename:")
             try:
                 f = open(filename, "w")
@@ -94,7 +136,7 @@ def startCurses(l, fromDict):
             undos.append(v[4])
         if x == ord('4'):
             #undo last
-            if i > 0:
+            if len(undos) > 0:
                 del aggregatedList[undos[-1]]
                 undos.pop()
                 i -= 2
