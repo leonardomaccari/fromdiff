@@ -1,10 +1,11 @@
 
-A python From: field similarity scorer.
+# A python From: field similarity scorer.
 
 If you have a list of "From:" email fields and you want to aggregate the
 emails that coming from the same person, that might similar (but
 different) "From:" field, this code can help you.
 
+## Input & Output
 It takes as input a JSON file, containing a list of "From:" fields in
 the form: 
 
@@ -38,6 +39,7 @@ In the example the two lines have a 1 match because the user of the
 email is the same one (modify this behavoiur if it doens't fit
 your needs).
 
+## Files
 The genList.py file just creates a test JSON list.
 The main.py file just shows how to use it.
 
@@ -53,8 +55,38 @@ with a dictionary of the kind
   ...
 }
 ```
+Before saving the file it will ask you if you want to aggregate the
+results and detect loops, which means that if you have chosen something
+like:
+
+```
+{ 
+  fromStringCopy1 : fromStringCopy2,
+  fromStringCopy3 : fromString,
+  ...
+}
+```
+This will be reduced to:
+
+```
+{ 
+  fromStringCopy1 : fromString,
+  fromStringCopy2 : fromString,
+  fromStringCopy3 : fromString,
+  ...
+}
+```
+
+and loops will be detected too.
 
 You can load that json in python and do what you want with it.
+
+# LICENSE: 
+
+Copyright Leonardo Maccari
+
+This code is released under the terms of the GPLv3 License.
+
 
 
 
