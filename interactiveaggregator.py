@@ -41,7 +41,10 @@ def saveResults(aggregatedList):
  
 def startCurses(l, fromDict):
     aggregatedList = {}
-    for v in l:
+    undos = []
+    i = 0
+    while i < len(l):
+        v = l[i]
         screen.clear()
         if v[3] in aggregatedList:
             leftElement = "1*)"
@@ -75,7 +78,8 @@ def startCurses(l, fromDict):
         screen.addstr(3, 2, leftElement)
         screen.addstr(4, 2, rightElement)
         screen.addstr(9, 4, "3 - Do nothing")
-        screen.addstr(10, 4, "4 - Exit")
+        screen.addstr(10, 4, "4 - Undo last")
+        screen.addstr(11, 4, "5 - Exit")
         screen.refresh()
     
         x = screen.getch()
@@ -83,14 +87,25 @@ def startCurses(l, fromDict):
         if x == ord('1'):
             curses.endwin()
             aggregatedList[v[3]] = v[4]
+            undos.append(v[3])
         if x == ord('2'):
             curses.endwin()
             aggregatedList[v[4]] = v[3]
+            undos.append(v[4])
         if x == ord('4'):
+            #undo last
+            if i > 0:
+                del aggregatedList[undos[-1]]
+                undos.pop()
+                i -= 2
+            else :
+                i -= 1
+            curses.endwin()
+        if x == ord('5'):
             saveResults(aggregatedList)
             curses.endwin()
             return 
-
+        i += 1
     saveResults(aggregatedList)
     curses.endwin()
 
