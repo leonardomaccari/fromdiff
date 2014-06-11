@@ -40,15 +40,22 @@ def cleanDict(d):
     while True:
         k = d.keys()[i]
         path = followPath(d, k, [k])
-
-        screen.addstr(2, 2, repr(path))
-        screen.refresh()
-        sleep(2)
-        screen.clear()
         if len(path) > 2:
-            root = path[-1]
-            for p in path[:-1]:
-                d[p] = root
+            screen.clear()
+            question="Do you want to merge this path? [Y/n]"
+            screen.addstr(2, 2, "Do you want to merge this path? [Y/n]" )
+            pathString = path[0]
+            for p in path[1:]:
+                pathString += " --> "+p
+            screen.addstr(3, 2, pathString)
+            screen.refresh()
+            input = screen.getstr(2, 2+len(question), 60)
+            if input != "Y":
+                continue
+            else:
+                root = path[-1]
+                for p in path[:-1]:
+                    d[p] = root
         i += 1
         if i >= len(d):
             break
@@ -88,14 +95,16 @@ def startCurses(l, fromDict):
     while i < len(l):
         v = l[i]
         screen.clear()
+        rightElement = ""
+        leftElement = ""
         if v[3] in aggregatedList:
             leftElement = "1*)"
             screen.addstr(7, 4, "X - 1) has been already merged,"+\
-                 "can not merge it again")
+                 "you don't want to merge it again")
         elif v[3] in aggregatedList.values(): 
             leftElement = "1+)"
-            screen.addstr(7, 4, "X - something has been "\
-                "merged in 1. You don't want to merge 1 into 2")
+            screen.addstr(7, 4, "1 - something has been "\
+                "merged in 1.")
         else:
             leftElement = "1)"
             screen.addstr(7, 4, "1 - Merge 1 into 2")
@@ -103,11 +112,11 @@ def startCurses(l, fromDict):
         if v[4] in aggregatedList:
             rightElement = "2*)"
             screen.addstr(8, 4, "X - 2) has been already merged,"+\
-                 "can not merge into it again")
+                 "you don't want to merge it again")
         elif v[4] in aggregatedList.values(): 
-            leftElement = "2+)"
+            rightElement = "2+)"
             screen.addstr(8, 4, "X - something has been "\
-                "merged in 2. You don't want to merge it into 1")
+                "merged in 2")
         else:
             rightElement = "2)"
             screen.addstr(8, 4, "2 - Merge 2 into 1")
@@ -165,6 +174,7 @@ def main():
     
     if len(sys.argv) == 1:
         print "please enter a json file to parse"
+        curses.endwin()
         sys.exit()
     else:
         try:
@@ -178,11 +188,12 @@ def main():
             print >> sys.stderr, "The file specified in the pseudonymfile",\
                     "option is a malformed JSON!"
             sys.exit(1)
+    
 
     parsedAddressDict = {}
     addressDict = {}
     for s in nameList:
-        sId = repr(s)
+        sId = str(s)
         parsedAddressDict[sId] = parseAddress(s)
         addressDict[sId] = s
         
