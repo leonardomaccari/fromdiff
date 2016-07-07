@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import sys
-from diffFrom import *
+from diffFrom import parse_list, parse_address
 import pprint
 import simplejson
 
@@ -19,21 +19,18 @@ def main():
             print >> sys.stderr, "Could not open file", sys.argv[1]
             sys.exit(1)
         try:
-            jList = simplejson.load(f)
+            json_list = simplejson.load(f)
         except simplejson.JSONDecodeError:
             print >> sys.stderr, "Could not parse JSON file", sys.argv[1]
             sys.exit(1)
 
-    fromList = []
-    for s in jList:
-        fromList.append(parseAddress(s))
-    l = parseList(fromList)
+    from_list = []
+    for s in json_list:
+        from_list.append(parse_address(s))
+    l = parse_list(from_list)
     pp = pprint.PrettyPrinter()
     pp.pprint(l)
-    
-
 
 
 if __name__ == "__main__":
     main()
-
