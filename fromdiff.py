@@ -113,13 +113,13 @@ def parse_dict(from_dict, cut_size=10):
     as an input, so the original string can be tracked back"""
 
     diff_list = []
-    keyList = from_dict.keys()
-    for i in range(len(keyList)):
-        fl = from_dict[keyList[i]]
-        for j in range(i+1, len(keyList)):
-            fr = from_dict[keyList[j]]
+    key_list = from_dict.keys()
+    for i in range(len(key_list)):
+        fl = from_dict[key_list[i]]
+        for j in range(i+1, len(key_list)):
+            fr = from_dict[key_list[j]]
             diff_list.append([from_diff(fl, fr), fl, fr,
-                             keyList[i], keyList[j]])
+                             key_list[i], key_list[j]])
     return sorted(diff_list, key=lambda x: -x[0][0])[:cut_size]
 
 
