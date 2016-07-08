@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import sys
-from diffFrom import parse_list, parse_address
+from fromdiff import parse_list, parse_address
 import pprint
 import simplejson
 

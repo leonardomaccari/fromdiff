@@ -1,11 +1,9 @@
 
-# A python "From:" field similarity scorer.
+# A python "From:" email field similarity scorer.
 
-If you have a list of "From:" email fields and you want to aggregate
-them for their similarity this code can help you. You need this when you
-have to parse a mailing list and there are people that use slightly
-different "From:" fields. You want to detect them and treat them as a
-single person.
+If you have a bunch of emails and you want to identify the sender of 
+the email, even if he uses slightly different "From" fields, this
+code can help you.
 
 ## Input & Output
 It takes as input a JSON file, containing a list of "From:" fields in
