@@ -3,6 +3,7 @@ from difflib import SequenceMatcher
 import jellyfish as jf
 # From: address parser
 from email.utils import parseaddr
+from collections import defaultdict
 
 
 def diff_string(string1, string2, algorithm="RO"):
@@ -57,10 +58,10 @@ def from_diff(left, right):
     rname, ruser, rdomain = right
 
     match_dict = {
-        0: "email->email similarity",
-        1: "name->name similarity",
-        2: "name->email similarity",
-        3: "email->name similarity"}
+        0: "email->email",
+        1: "name->name  ",
+        2: "name->email ",
+        3: "email->name "}
     # let's start with emails:
 
     # assumption: same email == same person
@@ -121,6 +122,29 @@ def parse_dict(from_dict, cut_size=10):
             diff_list.append([from_diff(fl, fr), fl, fr,
                              key_list[i], key_list[j]])
     return sorted(diff_list, key=lambda x: -x[0][0])[:cut_size]
+
+
+def linear_parse_dict(from_dict, cut_size=10):
+    """from_dict is of the kind
+    from_dict[ID] = [[firstname, secondname, thirdname...],
+            useremail, domainemail].
+    this function does the same of parse_dict but returns
+    a dictionary with left_entry -> [
+        [[match_score, kind_of_match], [parsed_left_entry],
+         [parsed_right_entry], right_entry] ]
+    that can be linearly analysed, instead that quadratically """
+
+    diff_dict = defaultdict(list)
+    for left in from_dict.keys():
+        for right in from_dict.keys():
+            if left == right:
+                continue
+            l_fields = from_dict[left]
+            r_fields = from_dict[right]
+            diff_dict[left].append([from_diff(l_fields, r_fields), l_fields,
+                                   r_fields, right])
+    return diff_dict
+
 
 
 

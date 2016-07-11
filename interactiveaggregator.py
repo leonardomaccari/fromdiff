@@ -2,8 +2,18 @@
 import sys
 import simplejson
 import curses
-from fromdiff import parse_address, parse_dict
+from fromdiff import parse_address, linear_parse_dict
 from time import sleep
+import pprint as pp
+from collections import defaultdict
+
+help_text = """ In the next screens, for each "From" address that was read from
+the list you passed, you will be shown a set of potential matches. You can
+choose to merge the "From" field into one of the others, and only one. The
+matches are ordered for their similarity rank.
+For each entry you are also told how many any other "From" was merged into it.
+
+Hit any button to continue"""
 
 
 def get_param(prompt_string):
@@ -11,7 +21,7 @@ def get_param(prompt_string):
     screen.border(0)
     screen.addstr(2, 2, prompt_string)
     screen.refresh()
-    input = screen.getstr(10, 10, 60)
+    input = screen.getstr(2, 2 + len(prompt_string) + 1, 60)
     return input
 
 
@@ -76,80 +86,104 @@ def save_results(aggregated_list):
                 screen.refresh()
                 sleep(2)
                 continue
-            simplejson.dump(aggregated_list, f)
+            simplejson.dump(aggregated_list, f, indent=4, sort_keys=True)
             f.close()
             break
         elif save == "n":
             return
 
 
+def print_input_choice(y, x, screen, undo):
+
+    screen.addstr(y, x, '"0-9" - merge into string')
+    screen.addstr(y+1, x, 'space - see next choices')
+    if undo:
+        screen.addstr(y+2, x, 'u - undo last')
+    else:
+        screen.addstr(y+2, x, '- - nothing to undo (go to next)')
+    screen.addstr(y+3, x, 'n - skip to next (do nothing)')
+    screen.addstr(y+5, x, 's - (Save and) Exit')
+    accepted_values = {}
+    for i in "1234567890 usn":
+        accepted_values[ord(i)] = i
+    while True:
+        ipt = screen.getch()
+        if ipt not in accepted_values:
+            screen.addstr(y+5, x,  'invalid option!')
+        else:
+            return accepted_values[ipt]
+
+
 def start_curses(l, from_dict):
     aggregated_list = {}
     undos = []
     i = 0
-    while i < len(l):
-        v = l[i]
-        screen.clear()
-        right_element = ""
-        left_element = ""
-        if v[3] in aggregated_list:
-            left_element = "1*)"
-            screen.addstr(7, 4, "X - 1) has been already merged," +
-                          "you don't want to merge it again")
-        elif v[3] in aggregated_list.values():
-            left_element = "1+)"
-            screen.addstr(7, 4, "1 - something has been "
-                          "merged in 1.")
-        else:
-            left_element = "1)"
-            screen.addstr(7, 4, "1 - Merge 1 into 2")
-
-        if v[4] in aggregated_list:
-            right_element = "2*)"
-            screen.addstr(8, 4, "X - 2) has been already merged," +
-                          "you don't want to merge it again")
-        elif v[4] in aggregated_list.values():
-            right_element = "2+)"
-            screen.addstr(8, 4, "X - something has been "
-                          "merged in 2")
-        else:
-            right_element = "2)"
-            screen.addstr(8, 4, "2 - Merge 2 into 1")
-
-        left_element += from_dict[v[3]]
-        right_element += from_dict[v[4]]
-
+    screen.clear()
+    screen.border(0)
+    max_show = 10  # could make this depend on the win size
+    for idx, i in enumerate(help_text.split("\n")):
+        screen.addstr(3+idx, 2, i)
+    screen.getch()
+    idx = 0
+    match_counter = defaultdict(int)
+    old_entries = set()
+    while idx < len(l):
+        (key, value) = sorted(l.items(),
+                              key=lambda(x): -max(y[0][0] for y in x[1]))[idx]
+        candidate = key
+        target_list = []
+        ordered_matches = sorted(value, key=lambda(x): -x[0][0])
+        for i in range(0, len(ordered_matches), max_show):
+            screen.clear()
+            # TODO print also how many merges were done in this string
+            match_str = " (" + str(match_counter[key]) + " aggregated already)"
+            y = 3
+            screen.addstr(y, 2, str(idx) + "/" + str(len(l)) + ") "
+                          + key + match_str)
+            y += 2
+            target_list = ordered_matches[i:i+max_show]
+            if key not in old_entries:
+                old_entries.add(key)
+            for j in range(max_show):
+                k = ordered_matches[i + j]
+                if k[3] in aggregated_list:
+                    number = "X"
+                else:
+                    number = str(j)
+                if k[3] not in old_entries:
+                    matcher = "(-) "
+                else:
+                    matcher = "(" + str(match_counter[k[3]]) + ") "
+                out_str = number + ") " + matcher \
+                    + str(k[0][0])[0:3].rjust(3, " ")
+                out_str += " " + str(k[0][1]) + "  " + k[3]
+                screen.addstr(y + j, 7, out_str)
+            y += max_show
+            ipt = print_input_choice(y + 1, 7, screen, len(undos))
+            if ipt == ' ':
+                continue
+            else:
+                break
         screen.border(0)
-        screen.addstr(2, 2, str(v[0][0])+": "+v[0][1])
-        screen.addstr(3, 2, left_element)
-        screen.addstr(4, 2, right_element)
-        screen.addstr(9, 4, "3 - Do nothing")
-        screen.addstr(10, 4, "4 - Undo last")
-        screen.addstr(11, 4, "5 - Save and Exit")
-        screen.refresh()
-        x = screen.getch()
-        if x == ord('1'):
-            curses.endwin()
-            aggregated_list[v[3]] = v[4]
-            undos.append(v[3])
-        if x == ord('2'):
-            curses.endwin()
-            aggregated_list[v[4]] = v[3]
-            undos.append(v[4])
-        if x == ord('4'):
+        if ipt in "1234567890":
+            aggregated_list[candidate] = target_list[int(ipt)]
+            undos.append(candidate)
+            match_counter[target_list[int(ipt)][3]] += 1
+        if ipt == "u":  # should go back to previous one after undoing
             # undo last
             if len(undos) > 0:
                 del aggregated_list[undos[-1]]
                 undos.pop()
-                i -= 2
-            else:
-                i -= 1
+                idx -= 2  # one to go back, one because we will increment
             curses.endwin()
-        if x == ord('5'):
-            save_results(aggregated_list)
+        if ipt == "s":
+            if aggregated_list:
+                save_results(aggregated_list)
             curses.endwin()
             return
-        i += 1
+        if ipt == "n":
+            pass
+        idx += 1
     save_results(aggregated_list)
     curses.endwin()
 
@@ -186,7 +220,7 @@ def main():
         s_id = str(s)
         parsed_address_dict[s_id] = parse_address(s)
         address_dict[s_id] = s
-    l = parse_dict(parsed_address_dict, cut_size=100)
+    l = linear_parse_dict(parsed_address_dict, cut_size=100)
     start_curses(l, address_dict)
 
 screen = curses.initscr()
