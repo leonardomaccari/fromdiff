@@ -4,13 +4,14 @@ from fromdiff import parse_list, parse_address
 import pprint
 import simplejson
 
+
 def main():
     """ Main to test the library, takes as input a file with each line
     of the type "firstname secondname thirdname... <user@domain> and
     performs similarity chacks on each line taken two by two """
 
     if len(sys.argv) == 1:
-        print "please enter a file to parse"
+        print "usage: ./main.py from-list"
         sys.exit()
     else:
         try:

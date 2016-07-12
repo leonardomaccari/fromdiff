@@ -3,27 +3,39 @@ import sys
 import random
 import simplejson
 
+# just a random wordlist
+
+wordlist = ["bromized", "unremaining", "missaid", "tardle", "Nickles",
+            "forcibleness", "conveying", "anapanapa", "Kyne", "hooters",
+            "cystophotography", "catabolically", "imaumbarah", "Crucianella",
+            "exegetical", "isoperimetry", "Bobby", "whizgig",
+            "benzophenoxazine", "overbearance", "probridge", "diamagnetically",
+            "fleecers", "packinghouse", "Senecio", "sinuato-", "bevatrons",
+            "supersecret", "irremissibility", "lightboard", "cooeyed",
+            "ethanedithiol", "haliplid", "ullaged", "pre-Dutch", "acidotic",
+            "apomixes", "sudden", "cawl", "circiter", "reuniters", "marks",
+            "tripletree", "Maastricht", "phytoclimatology", "Piotr",
+            "spirometer", "expiration", "self-focused", "pinko", "under-earth",
+            "overmelted", "intendit", "razor-fish", "hypnotizes", "Sheeler",
+            "multi", "Pterocarpus", "vascula", "Egwan", "subinduce",
+            "athletes", "never-waning", "recodified", "volt-coulomb", "bagnut",
+            "appointing", "gingerspice", "coeducationalism", "moonport",
+            "beblister", "thermomotive", "undevastating", "blennophlogisma",
+            "nontemperate", "ingeminated", "luteous", "prob", "romanization",
+            "permissible", "subtribual", "pyromorphism", "peridot", "-genous",
+            "bore", "swain", "dismutation", "ventriloque", "brigued",
+            "encharged", "Jeth", "montjoye", "anticult", "mystifier",
+            "ketimine", "tonality", "Eger", "Hohenstaufen", "Nicolette",
+            "Chouteau"]
+
 
 def random_line(f, size):
-    # skip header
-    next(f)
     wlist = []
-    for i in range(max(1000, size*2)):
-        try:
-            wlist.append(next(f))
-        except StopIteration:
-            break
-    random.shuffle(wlist)
     return wlist[:size]
 
-try:
-    wordlist = open("/usr/share/dict/linux.words", "r")
-except:
-    print "please configure a wordlist in the script"
-    sys.exit(1)
-
 random.seed()
-random_words = random_line(wordlist, 10)
+random.shuffle(wordlist)
+random_words = wordlist[:10]
 random_letters = list("qwertyuiopasdfghjklzxcvbnm")
 counter = 0
 from_list = []
