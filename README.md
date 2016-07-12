@@ -7,8 +7,8 @@ of the "From" field they use, which varies depending on time, device, etc...
 This code helps you doing that.
 
 ## Input & Output
-It takes as input a JSON file, containing a list of "From:" fields in
-the form: 
+The fromdiff library  takes as input a JSON file, containing a list of "From:"
+fields in the form: 
 
 "FirstName SecondName ThirdName..." <user@domain.extension>
 
@@ -46,21 +46,35 @@ email is the same one.
 The genlist.py file just creates a test JSON list.
 The main.py file just shows how to use it.
 
-The interactiveaggregator.py is more practically useful. It takes a JSON list,
-produces the ranking, then it lets you aggregate interactively the lines that
-matched better in the algorithm. Thus, you can produce a new JSON with a
-dictionary of the kind 
+The interactiveaggregator.py is more practically useful. It takes a mailbox
+file, extract the From fields, produces the ranking, then it lets you aggregate
+interactively the lines that matched better in the algorithm. Thus, you can
+produce a new JSON with a dictionary of the kind 
 
 ```
-{ 
-  fromStringCopy1 : fromString,
-  fromStringCopy2 : fromString,
-  ...
+{,
+    "\"qiotr neverwanong\" <subttibual@mysttfier.com>": [
+        [
+            0.8148148148148148,
+            "name->email "
+        ],
+        [
+            "qiotrneverwanong",
+            "subttibual",
+            "mysttfier.com"
+        ],
+        [
+            "mwrksmarrs",
+            "neverwanong",
+            "neverwanong.com"
+        ],
+        "\"mwrks marrs\" <neverwanong@neverwanong.com>"
+    ],
 }
 ```
 Before saving the file it will ask you if you want to aggregate the
 results and detect loops, which means that if you have chosen something
-like:
+like (i removed useless data in the next example):
 
 ```
 { 
@@ -80,7 +94,8 @@ This will be reduced to:
 }
 ```
 
-and loops will be detected too.
+and loops will be detected too (which should be impossible to have,
+but you never know).
 
 You can load that JSON in python and do what you want with it.
 

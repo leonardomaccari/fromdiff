@@ -4,8 +4,8 @@ import simplejson
 import curses
 from fromdiff import parse_address, linear_parse_dict
 from time import sleep
-import pprint as pp
 from collections import defaultdict
+import mailbox
 
 help_text = """ In the next screens, for each "From" address that was read from
 the list you passed, you will be shown a set of potential matches. You can
@@ -114,13 +114,13 @@ def print_input_choice(y, x, screen, undo):
             return accepted_values[ipt]
 
 
-def start_curses(l, from_dict):
+def start_curses(l):
     aggregated_list = {}
     undos = []
     i = 0
     screen.clear()
     screen.border(0)
-    max_show = 10  # could make this depend on the win size
+    max_show = min(10, len(l)-1)
     for idx, i in enumerate(help_text.split("\n")):
         screen.addstr(3+idx, 2, i)
     screen.getch()
@@ -145,6 +145,8 @@ def start_curses(l, from_dict):
             if key not in old_entries:
                 old_entries.add(key)
             for j in range(max_show):
+                if i + j >= len(ordered_matches):
+                    break
                 k = ordered_matches[i + j]
                 if k[3] in aggregated_list:
                     number = "X"
@@ -188,6 +190,22 @@ def start_curses(l, from_dict):
     curses.endwin()
 
 
+def parse_mbox(mbox_file):
+    """ Parses a mailbox, extract From values """
+
+    mbox = mailbox.mbox(mbox_file)
+    if not mbox:
+        print "Empty mbox, quitting"
+        curses.endwin()
+        sys.exit(1)
+    address_dict = {}
+    for message in mbox:
+        from_field = unicode(message["From"],
+                             'ISO-8859-2').encode('ascii', 'ignore')
+        address_dict[str(from_field)] = parse_address(from_field)
+    return address_dict
+
+
 def main():
     """ This code will parse text file made of a list of elements of the kind
     [["firstname secondname, thirdname... <user@email.ext>"]... ], it will
@@ -197,31 +215,14 @@ def main():
     the dictionary {pseudonym1:realname, pseudonym2:realname ...} that
     can be used in various contexts"""
 
-    if len(sys.argv) == 1:
-        print "please enter a json file to parse"
+    if len(sys.argv) <= 1:
+        print "please enter an mbox file to parse"
         curses.endwin()
         sys.exit()
     else:
-        try:
-            f = open(sys.argv[1], "r")
-        except:
-            print >> sys.stderr, "Could not open file", sys.argv[1]
-            sys.exit(1)
-        try:
-            name_list = simplejson.load(f)
-        except simplejson.JSONDecodeError:
-            print >> sys.stderr, "The file specified in the pseudonymfile",\
-                "option is a malformed JSON!"
-            sys.exit(1)
-
-    parsed_address_dict = {}
-    address_dict = {}
-    for s in name_list:
-        s_id = str(s)
-        parsed_address_dict[s_id] = parse_address(s)
-        address_dict[s_id] = s
-    l = linear_parse_dict(parsed_address_dict, cut_size=100)
-    start_curses(l, address_dict)
+        address_dict = parse_mbox(sys.argv[1])
+    l = linear_parse_dict(address_dict, cut_size=100)
+    start_curses(l)
 
 screen = curses.initscr()
 if __name__ == "__main__":
