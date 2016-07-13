@@ -11,9 +11,18 @@ help_text = """ In the next screens, for each "From" address that was read from
 the list you passed, you will be shown a set of potential matches. You can
 choose to merge the "From" field into one of the others, and only one. The
 matches are ordered for their similarity rank.
-For each entry you are also told how many any other "From" was merged into it.
+For each entry you are told:
 
-Hit any button to continue"""
+0) (-/0)   1 email->email  Name email
+
+0) is the number you should type to merge into thi entry
+(-/0)           "-" if this entry has not already been evaluated (+ if it was)
+                the number is the number of entries that have been already
+                merged in this one
+1               the similarity score
+email->email    the kind of similarity
+Hit any button to continue
+"""
 
 
 def get_param(prompt_string):
@@ -152,10 +161,15 @@ def start_curses(l):
                     number = "X"
                 else:
                     number = str(j)
+                matcher = "("
                 if k[3] not in old_entries:
-                    matcher = "(-) "
+                    matcher += "-/"
                 else:
-                    matcher = "(" + str(match_counter[k[3]]) + ") "
+                    matcher += "+/"
+                if k[3] not in match_counter:
+                    matcher += "0) "
+                else:
+                    matcher += str(match_counter[k[3]]) + ") "
                 out_str = number + ") " + matcher \
                     + str(k[0][0])[0:3].rjust(3, " ")
                 out_str += " " + str(k[0][1]) + "  " + k[3]
